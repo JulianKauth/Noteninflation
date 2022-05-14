@@ -8,15 +8,7 @@ def load_data() -> pd.DataFrame:
     Each row has a Year, State, Participants, Passed, Failed, Grade10, Grade11, Grade{12-40}
     """
 
-    columns = ["Year", "State", "Participants", "Passed", "Failed",
-               "Grade10", "Grade11", "Grade12", "Grade13", "Grade14",
-               "Grade15", "Grade16", "Grade17", "Grade18", "Grade19",
-               "Grade20", "Grade21", "Grade22", "Grade23", "Grade24",
-               "Grade25", "Grade26", "Grade27", "Grade28", "Grade29",
-               "Grade30", "Grade31", "Grade32", "Grade33", "Grade34",
-               "Grade35", "Grade36", "Grade37", "Grade38", "Grade39",
-               "Grade40"]
-    re_df = pd.DataFrame(columns=columns)
+    columns = ["Year", "State", "Participants", "Passed", "Failed", "Grade", "Count"]
 
     rows = []  # cols in the Excel sheet, but let's move to the dataframe state of mind as soon as possible
     for year in range(2006, 2021 + 1):
@@ -24,12 +16,14 @@ def load_data() -> pd.DataFrame:
         print(f"Reading Workbook {filename}")
         ws = openpyxl.load_workbook(filename=filename, read_only=True)["Noten"]
         for col in "BCDEFGHIJKLMNOPQ":
-            row = [year]
-            row.extend([cell[0].value for cell in ws[f"{col}5:{col}8"]])
-            row.extend([cell[0].value for cell in ws[f"{col}12:{col}42"]])
-            rows.append(row)
+            row = [year, ws[col + "5"].value]
+            row.extend([int(cell[0].value) for cell in ws[f"{col}6:{col}8"]])
+            grade_counts = [int(cell[0].value) for cell in ws[f"{col}12:{col}42"]]
+            for i, count in enumerate(grade_counts):
+                grade = (i + 10) / 10
+                rows.append(row + [grade, count])
 
-    return pd.DataFrame(rows, columns=columns, dtype=int)
+    return pd.DataFrame(rows, columns=columns)
 
 
 if __name__ == '__main__':
