@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import openpyxl
 
@@ -7,6 +9,9 @@ def load_data() -> pd.DataFrame:
     returns a dataframe that contains _all_ the data.
     Each row has a Year, State, Participants, Passed, Failed, Grade10, Grade11, Grade{12-40}
     """
+    pickle_file = "/share/Programming/PycharmProjects/Noteninflation/dataframe.pkl"
+    if os.path.exists(pickle_file):
+        return pd.read_pickle(pickle_file)
 
     columns = ["Year", "State", "Participants", "Passed", "Failed", "Grade", "Count"]
 
@@ -23,7 +28,9 @@ def load_data() -> pd.DataFrame:
                 grade = (i + 10) / 10
                 rows.append(row + [grade, count])
 
-    return pd.DataFrame(rows, columns=columns)
+    re = pd.DataFrame(rows, columns=columns)
+    pd.to_pickle(re, pickle_file)
+    return re
 
 
 if __name__ == '__main__':
