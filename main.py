@@ -73,7 +73,19 @@ def plot_state_comparison(df, kind="line", x="Year", y=None, title="Test", norma
         y = "AgvGrade"
 
     ax = plt.gca()
-    for state, state_df in df.groupby("State"):
+    styles = [
+        {"linestyle": "-", "marker": "^"},
+        {"linestyle": "-", "marker": "D"},
+        {"linestyle": "-", "marker": "o"},
+        {"linestyle": "-", "marker": "v"}
+    ]
+    colors = [
+        {"color": "brown"},
+        {"color": "blue"},
+        {"color": "orange"},
+        {"color": "green"}
+    ]
+    for i, (state, state_df) in enumerate(df.groupby("State")):
         # group data
         state_df = state_df.groupby([x]).mean().reset_index()
 
@@ -88,7 +100,7 @@ def plot_state_comparison(df, kind="line", x="Year", y=None, title="Test", norma
             state_df[y] = state_df[y] * global_max / val_max
 
         # plot the data
-        state_df.plot(kind=kind, x=x, y=y, ax=ax, label=state)
+        state_df.plot(kind=kind, x=x, y=y, ax=ax, label=state, **styles[i % 4], **colors[i // 4])
 
     plt.xlabel(x)
     plt.ylabel(y)
