@@ -6,6 +6,7 @@ import openpyxl
 
 SHOW = False
 
+
 def load_data() -> pd.DataFrame:
     """
     returns a dataframe that contains _all_ the data.
@@ -35,8 +36,11 @@ def load_data() -> pd.DataFrame:
     return re
 
 
-def plot_simple(df, kind="line", x="Year", y=None, title="Test"):
+def plot_simple(df, kind="line", x="Year", y=None, title="Test", grid="both"):
     df.reset_index().plot(kind=kind, x=x, y=y)
+    plt.xlabel(x)
+    plt.ylabel(y)
+    plt.grid(axis=grid)
     plt.title(title)
     if SHOW:
         plt.show()
@@ -53,11 +57,14 @@ def plot_double(df, kind="line", x="Year", y1=None, y2=None, title="Test"):
     ax = plt.gca()
     df.reset_index().plot(kind=kind, x=x, y=y1, ax=ax, label=y1)
     df.reset_index().plot(kind=kind, x=x, y=y2, ax=ax, label=y2, secondary_y=True)
+    plt.xlabel(x)
+    ax.grid()
     plt.title(title)
     plt.tight_layout()
     if SHOW:
         plt.show()
-    plt.savefig(f"images/plot_double_{title.lower().replace(' ', '_')}.png", dpi=300)
+    filename = title.lower().replace(' ', '_').replace('\n', '_')
+    plt.savefig(f"images/plot_double_{filename}.png", dpi=300)
     plt.clf()
 
 
@@ -83,8 +90,9 @@ def plot_state_comparison(df, kind="line", x="Year", y=None, title="Test", norma
         # plot the data
         state_df.plot(kind=kind, x=x, y=y, ax=ax, label=state)
 
-    plt.ylabel(y)
     plt.xlabel(x)
+    plt.ylabel(y)
+    plt.grid()
     plt.title(title)
     plt.tight_layout()
     if SHOW:
@@ -97,7 +105,7 @@ if __name__ == '__main__':
     dataframe = load_data()
 
     plot_simple(dataframe.groupby(["Year"]).sum().reset_index(), kind="bar", x="Year", y="Participants", title="Participants per Year")
-    plot_simple(dataframe.groupby(["Grade", "Year"]).sum(), kind="bar", x="Grade", y="Count", title="Grade Count per Year")
+    plot_simple(dataframe.groupby(["Grade", "Year"]).sum(), kind="bar", x="Grade", y="Count", title="Grade Count per Year", grid="y")
     plot_simple(dataframe.groupby(["Year"]).mean(), kind="line", x="Year", y="AvgGrade", title="Average Grade per Year")
     plot_simple(dataframe.groupby(["Year"]).mean(), kind="line", x="Year", y="FailedPercent", title="Number of Failed Participants each Year")
     plot_simple(dataframe[dataframe.State == "BY"].groupby(["Year"]).mean(), kind="line", x="Year", y="AvgGrade", title="Average Grade per Year in Bavaria")
@@ -108,5 +116,5 @@ if __name__ == '__main__':
     plot_state_comparison(dataframe, y="AvgGrade", title="Average Grade per Year and State")
     plot_state_comparison(dataframe, y="AvgGrade", normalize="local", title="Average Grade per Year and State (normalized with method 1)")
     plot_state_comparison(dataframe, y="AvgGrade", normalize="global", title="Average Grade per Year and State (normalized with method 1)")
-    next_title = "Average Grade and Number of Participants per Year in\nLower Saxony showing introduction and expiration of shortened curriculum"
+    next_title = "Average Grade and Number of Participants per Year in Lower\nSaxony showing introduction and expiration of shortened curriculum"
     plot_double(dataframe[dataframe.State == "NI"].groupby(["Year"]).mean(), y1="AvgGrade", y2="Participants", title=next_title)
