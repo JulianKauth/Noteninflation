@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import openpyxl
 
+SHOW = False
 
 def load_data() -> pd.DataFrame:
     """
     returns a dataframe that contains _all_ the data.
     Each row has a "Year", "State", "Participants", "Passed", "Failed", "FailedPercent", "AvgGrade", "Grade", "Count"
     """
-    pickle_file = "/share/Programming/PycharmProjects/Noteninflation/dataframe.pkl"
+    pickle_file = "/share/Programming/PycharmProjects/Noteninflation/data/dataframe.pkl"
     if os.path.exists(pickle_file):
         return pd.read_pickle(pickle_file)
 
@@ -18,7 +19,7 @@ def load_data() -> pd.DataFrame:
 
     rows = []  # cols in the Excel sheet, but let's move to the dataframe state of mind as soon as possible
     for year in range(2006, 2021 + 1):
-        filename = f"/share/Programming/PycharmProjects/Noteninflation/Aus_Abiturnoten_{year}.xlsx"
+        filename = f"/share/Programming/PycharmProjects/Noteninflation/data/Aus_Abiturnoten_{year}.xlsx"
         print(f"Reading Workbook {filename}")
         ws = openpyxl.load_workbook(filename=filename, read_only=True)["Noten"]
         for col in "BCDEFGHIJKLMNOPQ":
@@ -37,7 +38,10 @@ def load_data() -> pd.DataFrame:
 def plot_simple(df, kind="line", x="Year", y=None, title="Test"):
     df.reset_index().plot(kind=kind, x=x, y=y)
     plt.title(title)
-    plt.show()
+    if SHOW:
+        plt.show()
+    plt.savefig(f"images/plot_simple_{title.lower().replace(' ', '_')}.png", dpi=300)
+    plt.clf()
 
 
 def plot_double(df, kind="line", x="Year", y1=None, y2=None, title="Test"):
@@ -51,7 +55,10 @@ def plot_double(df, kind="line", x="Year", y1=None, y2=None, title="Test"):
     df.reset_index().plot(kind=kind, x=x, y=y2, ax=ax, label=y2, secondary_y=True)
     plt.title(title)
     plt.tight_layout()
-    plt.show()
+    if SHOW:
+        plt.show()
+    plt.savefig(f"images/plot_double_{title.lower().replace(' ', '_')}.png", dpi=300)
+    plt.clf()
 
 
 def plot_state_comparison(df, kind="line", x="Year", y=None, title="Test", normalize=None):
@@ -76,25 +83,30 @@ def plot_state_comparison(df, kind="line", x="Year", y=None, title="Test", norma
         # plot the data
         state_df.plot(kind=kind, x=x, y=y, ax=ax, label=state)
 
+    plt.ylabel(y)
+    plt.xlabel(x)
     plt.title(title)
     plt.tight_layout()
-    plt.show()
+    if SHOW:
+        plt.show()
+    plt.savefig(f"images/plot_by_state_{title.lower().replace(' ', '_')}.png", dpi=300)
+    plt.clf()
 
 
 if __name__ == '__main__':
     dataframe = load_data()
 
-    # plot_simple(dataframe.groupby(["Year"]).sum().reset_index(), "bar", "Year", "Participants")
-    # plot_simple(dataframe.groupby(["Grade", "Year"]).sum(), "bar", "Grade", "Count")
-    # plot_simple(dataframe.groupby(["Year"]).mean(), "line", "Year", "AvgGrade")
-    # plot_simple(dataframe.groupby(["Year"]).mean(), "line", "Year", "FailedPercent")
-    # plot_simple(dataframe[dataframe.State == "BY"].groupby(["Year"]).mean(), "line", "Year", "AvgGrade")
-    # plot_state_comparison(dataframe, y="AvgGrade")
-    # plot_simple(dataframe[dataframe.State == "BY"].groupby(["Year"]).mean(), "line", "Year", "Participants")
-    # plot_state_comparison(dataframe, y="Participants")
-    # plot_state_comparison(dataframe, y="Participants", normalize="local")
-    # plot_state_comparison(dataframe, y="Participants", normalize="global")
-    # plot_state_comparison(dataframe, y="AvgGrade")
-    # plot_state_comparison(dataframe, y="AvgGrade", normalize="local")
-    # plot_state_comparison(dataframe, y="AvgGrade", normalize="global")
-    plot_double(dataframe[dataframe.State == "NI"].groupby(["Year"]).mean(), y1="AvgGrade", y2="Participants")
+    plot_simple(dataframe.groupby(["Year"]).sum().reset_index(), kind="bar", x="Year", y="Participants", title="Participants per Year")
+    plot_simple(dataframe.groupby(["Grade", "Year"]).sum(), kind="bar", x="Grade", y="Count", title="Grade Count per Year")
+    plot_simple(dataframe.groupby(["Year"]).mean(), kind="line", x="Year", y="AvgGrade", title="Average Grade per Year")
+    plot_simple(dataframe.groupby(["Year"]).mean(), kind="line", x="Year", y="FailedPercent", title="Number of Failed Participants each Year")
+    plot_simple(dataframe[dataframe.State == "BY"].groupby(["Year"]).mean(), kind="line", x="Year", y="AvgGrade", title="Average Grade per Year in Bavaria")
+    plot_simple(dataframe[dataframe.State == "BY"].groupby(["Year"]).mean(), kind="line", x="Year", y="Participants", title="Participants per Year in Bavaria")
+    plot_state_comparison(dataframe, y="Participants", title="Participants per State")
+    plot_state_comparison(dataframe, y="Participants", normalize="local", title="Participants per State (normalized with method 1)")
+    plot_state_comparison(dataframe, y="Participants", normalize="global", title="Participants per State (normalized with method 2)")
+    plot_state_comparison(dataframe, y="AvgGrade", title="Average Grade per Year and State")
+    plot_state_comparison(dataframe, y="AvgGrade", normalize="local", title="Average Grade per Year and State (normalized with method 1)")
+    plot_state_comparison(dataframe, y="AvgGrade", normalize="global", title="Average Grade per Year and State (normalized with method 1)")
+    next_title = "Average Grade and Number of Participants per Year in\nLower Saxony showing introduction and expiration of shortened curriculum"
+    plot_double(dataframe[dataframe.State == "NI"].groupby(["Year"]).mean(), y1="AvgGrade", y2="Participants", title=next_title)
